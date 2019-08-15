@@ -1,6 +1,8 @@
 """
     字典 控制器
 """
+import hashlib
+
 from dict_server.dir_model.record_model import RecordModel
 from dict_server.dir_model.user_model import UserModel
 from dict_server.mysql_controller.record_controller import RecordController
@@ -50,6 +52,9 @@ class DictController:
         msg = "\n请输入密码："
         self.__connfd.send(msg.encode())
         password = self.__connfd.recv(32).decode()
+
+        password = self.__encryption(password)
+
         result = self.__user_controller.login(name, password)
         if result:
             self.__user = name
@@ -94,6 +99,9 @@ class DictController:
         msg = "\n请输入密码："
         self.__connfd.send(msg.encode())
         password = self.__connfd.recv(32).decode()
+
+        password = self.__encryption(password)
+
         result = self.__user_controller.register(UserModel(name, password))
         if result[0]:
             msg = "Register Success\n"
@@ -106,6 +114,14 @@ class DictController:
                 self.__globle_msg = ""
         else:
             self.__globle_msg = result[1] + "\n"
+
+    def __encryption(self, passwd):
+        # 对密码加密
+        salt=b"##90*" #加盐
+        hash = hashlib.md5(salt)
+        hash.update(passwd.encode())
+        password = hash.hexdigest()
+        return password
 
     def __handle_command(self, command):
         if not command or command == "3":
@@ -140,9 +156,9 @@ class DictController:
     def __find_record(self):
         msg = "name  word \n"
         for info in self.__record_controller.find_record_by_user(self.__user):
-            for item in info :
-                msg=msg+item+" "
-            msg+="\n"
+            for item in info:
+                msg = msg + item + " "
+            msg += "\n"
         msg += "\n请输入字符e结束"
         self.__connfd.send(msg.encode())
         self.__connfd.recv(128).decode()

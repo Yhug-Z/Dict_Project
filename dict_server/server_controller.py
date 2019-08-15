@@ -1,6 +1,8 @@
 """
     tcp 服务器  协程 并发
 """
+import os
+
 from gevent import monkey
 
 from dict_server.dict_controller import DictController
@@ -29,9 +31,15 @@ class ServerController:
 
     def run(self):
         while True:
-            connfd, addr = self.__sockfd.accept()
-            print("Connect from:", addr)
-            gevent.spawn(DictController().run, connfd, addr)
+            try:
+                connfd, addr = self.__sockfd.accept()
+            except KeyboardInterrupt as e:
+                print("End",e)
+                self.__sockfd.close()
+                os._exit(0)
+            else:
+                print("Connect from:", addr)
+                gevent.spawn(DictController().run, connfd, addr)
 
 
 # ===========================
