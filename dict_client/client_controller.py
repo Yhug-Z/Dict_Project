@@ -1,6 +1,7 @@
 """
     tcp 客户端链接
 """
+import os
 from socket import socket
 
 class ClientController:
@@ -18,10 +19,16 @@ class ClientController:
         while True:
             data=self.__sorkfd.recv(1024)
             print(data.decode())
-            command=input("")
-            self.__sorkfd.send(command.encode())
-            if command=="3":
-                break
+            try:
+                command=input("")
+            except KeyboardInterrupt:
+                print("Thanks")
+                os._exit(0)
+            else:
+                self.__sorkfd.send(command.encode())
+                if command=="3":
+                    print("Thanks")
+                    break
 
 #=====================================
 if __name__ == '__main__':

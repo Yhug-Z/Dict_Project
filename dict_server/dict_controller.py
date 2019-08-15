@@ -3,11 +3,13 @@
 """
 from dict_server.dir_model.user_model import UserModel
 from dict_server.mysql_controller.user_controller import UserController
+from dict_server.mysql_controller.words_controller import WordsController
 
 
 class DictController:
     def __init__(self):
         self.__user_controller = UserController('dict', 'User')
+        self.__words_controller= WordsController("dict","words")
         self.__globle_msg = ""
 
     def run(self, connfd, addr):
@@ -18,7 +20,11 @@ class DictController:
     def __first_view(self):
         while True:
             self.__globle_msg += self.__menu_first() + "\nCommand:"
-            self.__connfd.send(self.__globle_msg.encode())
+            try:
+                self.__connfd.send(self.__globle_msg.encode())
+            except OSError:
+                print(self.__addr,"end")
+                break
             command = self.__connfd.recv(1024).decode()
             if self.__handle_command(command):
                 pass
@@ -54,9 +60,12 @@ class DictController:
             self.__connfd.send(self.__globle_msg.encode())
             command = self.__connfd.recv(1024).decode()
             if not command or command=="3":
+                self.__connfd.close()
+                break
+            elif command == "4":
                 break
             elif command=="1":
-                pass
+                self.__find_word()
             elif command=="2":
                 pass
             else:
@@ -65,9 +74,9 @@ class DictController:
 
     def __menu_second(self):
         return """
-                ============================
-                1.查单词   2.历史记录    3.注销
-                ============================
+                ==================================
+                1.查单词   2.历史记录  3.退出  4.注销
+                ==================================
 
                 """
 
@@ -99,7 +108,7 @@ class DictController:
             return False
         if command in '12':
             if command == "1":
-                print(command)
+                # print(command)
                 result = self.__login()
                 if result[0]:
                     self.__globle_msg = ""
@@ -111,3 +120,13 @@ class DictController:
             self.__globle_msg = "Command Error\n"
 
         return True
+
+    def __find_word(self):
+        msg="请输入单词："
+        self.__connfd.send(msg.encode())
+        word=self.__connfd.recv(1024).decode()
+        mean=self.__words_controller.find(word)
+        if mean:
+            self.__globle_msg=mean+"\n"
+        else:
+            self.__globle_msg = "Can't find word" + "\n"
