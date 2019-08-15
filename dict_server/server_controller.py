@@ -10,6 +10,7 @@ monkey.patch_socket()
 from socket import *
 import gevent
 
+
 class ServerController:
     def __init__(self, ip="0.0.0.0", port=21608):
         self.__ip = ip
@@ -28,12 +29,12 @@ class ServerController:
 
     def run(self):
         while True:
-            connfd,addr=self.__sockfd.accept()
-            print("Connect from:",addr)
-            gevent.spawn(DictController().run,connfd,addr)
+            connfd, addr = self.__sockfd.accept()
+            print("Connect from:", addr)
+            gevent.spawn(DictController().run, connfd, addr)
 
 
-#===========================
+# ===========================
 if __name__ == '__main__':
-    server=ServerController(port=21609)
+    server = ServerController(port=21609)
     server.run()

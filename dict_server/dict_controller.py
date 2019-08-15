@@ -1,7 +1,9 @@
 """
     字典 控制器
 """
+from dict_server.dir_model.record_model import RecordModel
 from dict_server.dir_model.user_model import UserModel
+from dict_server.mysql_controller.record_controller import RecordController
 from dict_server.mysql_controller.user_controller import UserController
 from dict_server.mysql_controller.words_controller import WordsController
 
@@ -9,8 +11,10 @@ from dict_server.mysql_controller.words_controller import WordsController
 class DictController:
     def __init__(self):
         self.__user_controller = UserController('dict', 'User')
-        self.__words_controller= WordsController("dict","words")
+        self.__words_controller = WordsController("dict", "words")
+        self.__record_controller = RecordController("dict", "record")
         self.__globle_msg = ""
+        self.__user = ""
 
     def run(self, connfd, addr):
         self.__connfd = connfd
@@ -23,7 +27,7 @@ class DictController:
             try:
                 self.__connfd.send(self.__globle_msg.encode())
             except OSError:
-                print(self.__addr,"end")
+                print(self.__addr, "end")
                 break
             command = self.__connfd.recv(1024).decode()
             if self.__handle_command(command):
@@ -48,29 +52,29 @@ class DictController:
         password = self.__connfd.recv(32).decode()
         result = self.__user_controller.login(name, password)
         if result:
+            self.__user = name
             self.__second_view()
             return (True,)
         else:
             return (False, "Login Failure\n")
 
     def __second_view(self):
-        self.__globle_msg=""
+        self.__globle_msg = ""
         while True:
             self.__globle_msg += self.__menu_second() + "\nCommand:"
             self.__connfd.send(self.__globle_msg.encode())
             command = self.__connfd.recv(1024).decode()
-            if not command or command=="3":
+            if not command or command == "3":
                 self.__connfd.close()
                 break
             elif command == "4":
                 break
-            elif command=="1":
+            elif command == "1":
                 self.__find_word()
-            elif command=="2":
-                pass
+            elif command == "2":
+                self.__find_record()
             else:
                 self.__globle_msg = "Command Error\n"
-
 
     def __menu_second(self):
         return """
@@ -97,6 +101,7 @@ class DictController:
             self.__connfd.send(msg.encode())
             command = self.__connfd.recv(4).decode()
             if command == "Y":
+                self.__user = name
                 self.__second_view()
                 self.__globle_msg = ""
         else:
@@ -122,11 +127,26 @@ class DictController:
         return True
 
     def __find_word(self):
-        msg="请输入单词："
+        msg = "请输入单词："
         self.__connfd.send(msg.encode())
-        word=self.__connfd.recv(1024).decode()
-        mean=self.__words_controller.find(word)
+        word = self.__connfd.recv(1024).decode()
+        self.__add_record(RecordModel(self.__user, word))
+        mean = self.__words_controller.find(word)
         if mean:
-            self.__globle_msg=mean+"\n"
+            self.__globle_msg = mean + "\n"
         else:
             self.__globle_msg = "Can't find word" + "\n"
+
+    def __find_record(self):
+        msg = "name  word \n"
+        for info in self.__record_controller.find_record_by_user(self.__user):
+            for item in info :
+                msg=msg+item+" "
+            msg+="\n"
+        msg += "\n请输入字符e结束"
+        self.__connfd.send(msg.encode())
+        self.__connfd.recv(128).decode()
+        self.__globle_msg = ""
+
+    def __add_record(self, target):
+        self.__record_controller.add_record(target)

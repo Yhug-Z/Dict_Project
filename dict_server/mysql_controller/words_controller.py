@@ -20,4 +20,4 @@ class WordsController:
         return None
 
     def __select_by_word(self):
-        return "select mean from "+self.table+" where word=%s "
+        return "select mean from " + self.table + " where word=%s "
