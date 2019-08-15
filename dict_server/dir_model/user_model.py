@@ -3,7 +3,7 @@
 """
 
 
-class UserModer:
+class UserModel:
     """
     用户账号，密码数据模型
     """

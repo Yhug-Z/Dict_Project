@@ -1,8 +1,8 @@
 """
     字典 控制器
 """
-from dict_server.dir_model.user_moder import UserModer
-from dict_server.user_controller import UserController
+from dict_server.dir_model.user_model import UserModel
+from dict_server.mysql_controller.user_controller import UserController
 
 
 class DictController:
@@ -48,7 +48,28 @@ class DictController:
             return (False, "Login Failure\n")
 
     def __second_view(self):
-        pass
+        self.__globle_msg=""
+        while True:
+            self.__globle_msg += self.__menu_second() + "\nCommand:"
+            self.__connfd.send(self.__globle_msg.encode())
+            command = self.__connfd.recv(1024).decode()
+            if not command or command=="3":
+                break
+            elif command=="1":
+                pass
+            elif command=="2":
+                pass
+            else:
+                self.__globle_msg = "Command Error\n"
+
+
+    def __menu_second(self):
+        return """
+                ============================
+                1.查单词   2.历史记录    3.注销
+                ============================
+
+                """
 
     def __exit(self):
         self.__connfd.close()
@@ -60,7 +81,7 @@ class DictController:
         msg = "\n请输入密码："
         self.__connfd.send(msg.encode())
         password = self.__connfd.recv(32).decode()
-        result = self.__user_controller.register(UserModer(name, password))
+        result = self.__user_controller.register(UserModel(name, password))
         if result[0]:
             msg = "Register Success\n"
             msg += "输入Y进入字典："

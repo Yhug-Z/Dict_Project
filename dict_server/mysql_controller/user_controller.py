@@ -60,8 +60,8 @@ class UserController:
 
 
 if __name__ == '__main__':
-    from dict_server.dir_model.user_moder import UserModer
+    from dict_server.dir_model.user_model import UserModel
 
     test = UserController('Account_test', 'account_local_test')
-    print(test.register(UserModer("user03", "123456")))
+    print(test.register(UserModel("user03", "123456")))
     print(test.login("user03", "12345"))
